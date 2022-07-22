@@ -32,10 +32,13 @@ class ElasticSearch(object):
         self.number_of_shards = es_credentials["number_of_shards"]
         
         self.es = Elasticsearch(
-            [es_credentials["hostname"]], 
+            # [es_credentials["hostname"]], 
             timeout=es_credentials["timeout"], 
             retry_on_timeout=es_credentials["retry_on_timeout"], 
-            maxsize=es_credentials["maxsize"])
+            maxsize=es_credentials["maxsize"],
+            cloud_id="ss-test:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyRjYjVkN2M0M2NjYzQ0MDViYWIxNDQ4Njg3NWFhNGFlMiQ2YWFmMDNiODNmMDE0YjgyOTUxNjM1ZjIyOGI3NDE2MQ==",
+            http_auth=("elastic", "cqKRNj2KelqJaeQMflP27l6n")
+            )
 
     def check_language_supported(self):
         """Check Language Supported in Elasticsearch
@@ -154,7 +157,9 @@ class ElasticSearch(object):
         return self.hit_template(es_res=res, hits=hits)
     
     
-    def lexical_multisearch(self, texts: List[str], top_hits: int, skip: int = 0) -> Dict[str, object]:
+    def lexical_multisearch(self, inputs: Tuple[List[str], int, int]) -> Dict[str, object]:
+    # def lexical_multisearch(self, texts: List[str], top_hits: int, skip: int=0) -> Dict[str, object]:
+
         """Multiple Query search in Elasticsearch
 
         Args:
@@ -165,6 +170,7 @@ class ElasticSearch(object):
         Returns:
             Dict[str, object]: Hit results
         """
+        texts, top_hits, skip = inputs
         request = []
         
         assert skip + top_hits <= 10000, "Elastic-Search Window too large, Max-Size = 10000"
