@@ -110,3 +110,7 @@ with ThreadPool(NUM_THREADS) as pool:
         if iter % writing_freq == 0 or iter == batch_size:
             with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top1k.json"), "w") as f:
                 json.dump(retrieved_qrels, f)
+                
+    with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top1k.json"), "w") as f:
+        json.dump(retrieved_qrels, f)
+
