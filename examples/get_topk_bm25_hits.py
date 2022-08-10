@@ -21,7 +21,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 #### /print debug information to stdout
 
 #### Download nfcorpus.zip dataset and unzip the dataset
-dataset = "nq-train"
+dataset = "fiqa"
 out_path = f"gs://cohere-dev/eve/data/retrieval/beir/{dataset}"
 writing_freq = 512
 
@@ -62,10 +62,10 @@ iter = 0
 batch_size = 256 # 16 * 16
 sub_batch_size = 16
 qids = list(qrels)
-hard_negatives_max = 1000
+hard_negatives_max = 100
 
-if gfile.exists(os.path.join(out_path, f"{dataset}_bm25_top1k.json")):
-    with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top1k.json"), "r+") as f:
+if gfile.exists(os.path.join(out_path, f"{dataset}_bm25_top100.json")):
+    with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top100.json"), "r+") as f:
         retrieved_qrels = json.load(f)
         starting_idx = len(retrieved_qrels)
         print(f"Loaded cache for {dataset} at index {starting_idx-1}.")
@@ -108,9 +108,9 @@ with ThreadPool(NUM_THREADS) as pool:
         iter += batch_size
 
         if iter % writing_freq == 0 or iter == batch_size:
-            with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top1k.json"), "w") as f:
+            with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top100.json"), "w") as f:
                 json.dump(retrieved_qrels, f)
                 
-    with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top1k.json"), "w") as f:
+    with gfile.GFile(os.path.join(out_path, f"{dataset}_bm25_top100.json"), "w") as f:
         json.dump(retrieved_qrels, f)
 
