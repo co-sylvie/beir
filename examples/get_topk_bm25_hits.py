@@ -28,7 +28,7 @@ writing_freq = 512
 
 # url = "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{}.zip".format(dataset)
 out_dir = os.path.join(pathlib.Path(__file__).parent.absolute(), "datasets")
-url = "http://202.61.230.171/beir/robust04.zip"
+url = "http://202.61.230.171/beir/trec-news.zip"
 data_path = util.download_and_unzip(url, out_dir)
 
 #### Provide the data_path where scifact has been downloaded and unzipped
@@ -102,7 +102,10 @@ with ThreadPool(NUM_THREADS) as pool:
                 print(f"query {qid} only has {len(hit['hits'])} hits - skipping...")
                 continue
             for i in range(hard_negatives_max):
-                temp_retrieved[qid] = {hit["hits"][i][0]: hit["hits"][i][1]}
+                if qid in temp_retrieved:
+                    temp_retrieved[qid][hit["hits"][i][0]] = hit["hits"][i][1]
+                else:
+                    temp_retrieved[qid] = {hit["hits"][i][0]: hit["hits"][i][1]}
 
         retrieved_qrels.update(temp_retrieved)
         iter += batch_size
