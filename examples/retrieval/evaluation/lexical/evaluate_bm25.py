@@ -82,3 +82,4 @@ scores = sorted(scores_dict.items(), key=lambda item: item[1], reverse=True)
 for rank in range(10):
     doc_id = scores[rank][0]
     logging.info("Doc %d: %s [%s] - %s\n" % (rank+1, doc_id, corpus[doc_id].get("title"), corpus[doc_id].get("text")))
+    
