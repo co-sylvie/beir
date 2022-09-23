@@ -34,18 +34,24 @@ logging.basicConfig(level=logging.INFO)
 
 #Important, you need to shield your code with if __name__. Otherwise, CUDA runs into issues when spawning new processes.
 if __name__ == "__main__":
+    dataset = "mrtydi"
+
+    # #### Download nfcorpus.zip dataset and unzip the dataset
+    # url = "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{}.zip".format(dataset)
+    # out_dir = os.path.join(pathlib.Path(__file__).parent.absolute(), "datasets")
+    # data_path = util.download_and_unzip(url, out_dir)
+    # breakpoint()
 
     tick = time.time()
-
-    dataset = "nfcorpus"
     keep_in_memory = False
     streaming = False
     corpus_chunk_size = 2048
     batch_size = 256 # sentence bert model batch size
-    model_name = "msmarco-distilbert-base-tas-b"
+    model_name = "/home/sylvie_cohere_ai/sentence-transformers/output/make-multilingual-sys-2022-09-21_03-23-15"
     target_devices = None # ['cpu']*2
-
-    corpus, queries, qrels = HFDataLoader(hf_repo=f"BeIR/{dataset}", streaming=streaming, keep_in_memory=keep_in_memory).load(split="test")
+    lang = "swahili"
+    data_path = f"examples/retrieval/evaluation/dense/datasets/mrtydi/{lang}"
+    corpus, queries, qrels = HFDataLoader(data_folder=data_path, streaming=streaming, keep_in_memory=keep_in_memory).load(split="test")
 
     #### Dense Retrieval using SBERT (Sentence-BERT) ####
     #### Provide any pretrained sentence-transformers model
@@ -75,16 +81,16 @@ if __name__ == "__main__":
     tock = time.time()
     print("--- Total time taken: {:.2f} seconds ---".format(tock - tick))
 
-    #### Print top-k documents retrieved ####
-    top_k = 10
+    # #### Print top-k documents retrieved ####
+    # top_k = 10
 
-    query_id, ranking_scores = random.choice(list(results.items()))
-    scores_sorted = sorted(ranking_scores.items(), key=lambda item: item[1], reverse=True)
-    query = queries.filter(lambda x: x['id']==query_id)[0]['text']
-    logging.info("Query : %s\n" % query)
+    # query_id, ranking_scores = random.choice(list(results.items()))
+    # scores_sorted = sorted(ranking_scores.items(), key=lambda item: item[1], reverse=True)
+    # query = queries.filter(lambda x: x['id']==query_id)[0]['text']
+    # logging.info("Query : %s\n" % query)
 
-    for rank in range(top_k):
-        doc_id = scores_sorted[rank][0]
-        doc = corpus.filter(lambda x: x['id']==doc_id)[0]
-        # Format: Rank x: ID [Title] Body
-        logging.info("Rank %d: %s [%s] - %s\n" % (rank+1, doc_id, doc.get("title"), doc.get("text")))
+    # for rank in range(top_k):
+    #     doc_id = scores_sorted[rank][0]
+    #     doc = corpus.filter(lambda x: x['id']==doc_id)[0]
+    #     # Format: Rank x: ID [Title] Body
+    #     logging.info("Rank %d: %s [%s] - %s\n" % (rank+1, doc_id, doc.get("title"), doc.get("text")))

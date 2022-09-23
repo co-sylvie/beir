@@ -16,12 +16,17 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     handlers=[LoggingHandler()])
 #### /print debug information to stdout
 
-dataset = "trec-covid"
+# dataset = "trec-covid"
 
-#### Download nfcorpus.zip dataset and unzip the dataset
-url = "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{}.zip".format(dataset)
-out_dir = os.path.join(pathlib.Path(__file__).parent.absolute(), "datasets")
-data_path = util.download_and_unzip(url, out_dir)
+# #### Download nfcorpus.zip dataset and unzip the dataset
+# url = "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{}.zip".format(dataset)
+# out_dir = os.path.join(pathlib.Path(__file__).parent.absolute(), "datasets")
+# data_path = util.download_and_unzip(url, out_dir)
+
+corpus_chunk_size = 50000
+model_name = "sentence-transformers/LaBSE" # "/home/sylvie_cohere_ai/sentence-transformers/output/make-multilingual-sys-2022-09-21_03-23-15"
+lang = "telugu"
+data_path = f"examples/retrieval/evaluation/dense/datasets/mrtydi/{lang}"
 
 #### Provide the data path where nfcorpus has been downloaded and unzipped to the data loader
 # data folder would contain these files: 
@@ -36,7 +41,7 @@ corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="te
 #### The model was fine-tuned using cosine-similarity.
 #### Complete list - https://www.sbert.net/docs/pretrained_models.html
 
-model = DRES(models.SentenceBERT("msmarco-distilbert-base-tas-b"), batch_size=256, corpus_chunk_size=512*9999)
+model = DRES(models.SentenceBERT(model_name), batch_size=256, corpus_chunk_size=corpus_chunk_size)
 retriever = EvaluateRetrieval(model, score_function="dot")
 
 #### Retrieve dense results (format of results is identical to qrels)
@@ -54,13 +59,13 @@ recall_cap = retriever.evaluate_custom(qrels, results, retriever.k_values, metri
 hole = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="hole")
 
 #### Print top-k documents retrieved ####
-top_k = 10
+# top_k = 10
 
-query_id, ranking_scores = random.choice(list(results.items()))
-scores_sorted = sorted(ranking_scores.items(), key=lambda item: item[1], reverse=True)
-logging.info("Query : %s\n" % queries[query_id])
+# query_id, ranking_scores = random.choice(list(results.items()))
+# scores_sorted = sorted(ranking_scores.items(), key=lambda item: item[1], reverse=True)
+# logging.info("Query : %s\n" % queries[query_id])
 
-for rank in range(top_k):
-    doc_id = scores_sorted[rank][0]
-    # Format: Rank x: ID [Title] Body
-    logging.info("Rank %d: %s [%s] - %s\n" % (rank+1, doc_id, corpus[doc_id].get("title"), corpus[doc_id].get("text")))
+# for rank in range(top_k):
+#     doc_id = scores_sorted[rank][0]
+#     # Format: Rank x: ID [Title] Body
+#     logging.info("Rank %d: %s [%s] - %s\n" % (rank+1, doc_id, corpus[doc_id].get("title"), corpus[doc_id].get("text")))
