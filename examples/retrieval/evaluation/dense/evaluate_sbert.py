@@ -24,39 +24,31 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 # data_path = util.download_and_unzip(url, out_dir)
 
 corpus_chunk_size = 50000
-model_name = "sentence-transformers/LaBSE" # "/home/sylvie_cohere_ai/sentence-transformers/output/make-multilingual-sys-2022-09-21_03-23-15"
-lang = "telugu"
-data_path = f"examples/retrieval/evaluation/dense/datasets/mrtydi/{lang}"
-
-#### Provide the data path where nfcorpus has been downloaded and unzipped to the data loader
-# data folder would contain these files: 
-# (1) nfcorpus/corpus.jsonl  (format: jsonlines)
-# (2) nfcorpus/queries.jsonl (format: jsonlines)
-# (3) nfcorpus/qrels/test.tsv (format: tsv ("\t"))
-
-corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
-
-#### Dense Retrieval using SBERT (Sentence-BERT) ####
-#### Provide any pretrained sentence-transformers model
-#### The model was fine-tuned using cosine-similarity.
-#### Complete list - https://www.sbert.net/docs/pretrained_models.html
-
+model_name = "/home/sylvie_cohere_ai/beir/models/make-multilingual-sys-2022-09-21_03-23-15_epoch0"
 model = DRES(models.SentenceBERT(model_name), batch_size=256, corpus_chunk_size=corpus_chunk_size)
 retriever = EvaluateRetrieval(model, score_function="dot")
 
-#### Retrieve dense results (format of results is identical to qrels)
-start_time = time()
-results = retriever.retrieve(corpus, queries)
-end_time = time()
-print("Time taken to retrieve: {:.2f} seconds".format(end_time - start_time))
-#### Evaluate your retrieval using NDCG@k, MAP@K ...
+# skipping languages with >5m texts in corpus ('english', 'japanese', 'russian')
+languages = ['arabic', 'bengali', 'finnish', 'indonesian', 'korean', 'swahili', 'telugu', 'thai']
+for lang in languages:
+    print(f"LANGUAGE: {lang}!!!")
+    data_path = f"examples/retrieval/evaluation/dense/datasets/mrtydi/{lang}"
 
-logging.info("Retriever evaluation for k in: {}".format(retriever.k_values))
-ndcg, _map, recall, precision = retriever.evaluate(qrels, results, retriever.k_values)
+    corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
+    #### Retrieve dense results (format of results is identical to qrels)
+    start_time = time()
+    results = retriever.retrieve(corpus, queries)
+    end_time = time()
+    print("Time taken to retrieve: {:.2f} seconds".format(end_time - start_time))
+    #### Evaluate your retrieval using NDCG@k, MAP@K ...
 
-mrr = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="mrr")
-recall_cap = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="r_cap")
-hole = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="hole")
+    logging.info("Retriever evaluation for k in: {}".format(retriever.k_values))
+    ndcg, _map, recall, precision = retriever.evaluate(qrels, results, retriever.k_values)
+
+    mrr = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="mrr")
+
+# recall_cap = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="r_cap")
+# hole = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="hole")
 
 #### Print top-k documents retrieved ####
 # top_k = 10

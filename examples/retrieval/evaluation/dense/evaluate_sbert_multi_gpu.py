@@ -47,50 +47,51 @@ if __name__ == "__main__":
     streaming = False
     corpus_chunk_size = 2048
     batch_size = 256 # sentence bert model batch size
-    model_name = "/home/sylvie_cohere_ai/sentence-transformers/output/make-multilingual-sys-2022-09-21_03-23-15"
+    model_name = "/home/sylvie_cohere_ai/beir/models/make-multilingual-sys-2022-09-21_03-23-15_epoch0"
     target_devices = None # ['cpu']*2
-    lang = "swahili"
-    data_path = f"examples/retrieval/evaluation/dense/datasets/mrtydi/{lang}"
-    corpus, queries, qrels = HFDataLoader(data_folder=data_path, streaming=streaming, keep_in_memory=keep_in_memory).load(split="test")
+    languages = ['arabic', 'bengali', 'finnish', 'indonesian', 'japanese', 'korean', 'russian', 'telugu', 'thai', 'swahili']
+    for lang in languages:
+        data_path = f"examples/retrieval/evaluation/dense/datasets/mrtydi/{lang}"
+        corpus, queries, qrels = HFDataLoader(data_folder=data_path, streaming=streaming, keep_in_memory=keep_in_memory).load(split="test")
 
-    #### Dense Retrieval using SBERT (Sentence-BERT) ####
-    #### Provide any pretrained sentence-transformers model
-    #### The model was fine-tuned using cosine-similarity.
-    #### Complete list - https://www.sbert.net/docs/pretrained_models.html
-    beir_model = models.SentenceBERT(model_name)
+        #### Dense Retrieval using SBERT (Sentence-BERT) ####
+        #### Provide any pretrained sentence-transformers model
+        #### The model was fine-tuned using cosine-similarity.
+        #### Complete list - https://www.sbert.net/docs/pretrained_models.html
+        beir_model = models.SentenceBERT(model_name)
 
-    #### Start with Parallel search and evaluation
-    model = DRPES(beir_model, batch_size=batch_size, target_devices=target_devices, corpus_chunk_size=corpus_chunk_size)
-    retriever = EvaluateRetrieval(model, score_function="dot")
+        #### Start with Parallel search and evaluation
+        model = DRPES(beir_model, batch_size=batch_size, target_devices=target_devices, corpus_chunk_size=corpus_chunk_size)
+        retriever = EvaluateRetrieval(model, score_function="dot")
 
-    #### Retrieve dense results (format of results is identical to qrels)
-    start_time = time.time()
-    results = retriever.retrieve(corpus, queries)
-    end_time = time.time()
-    print("Time taken to retrieve: {:.2f} seconds".format(end_time - start_time))
+        #### Retrieve dense results (format of results is identical to qrels)
+        start_time = time.time()
+        results = retriever.retrieve(corpus, queries)
+        end_time = time.time()
+        print("Time taken to retrieve: {:.2f} seconds".format(end_time - start_time))
 
-    #### Evaluate your retrieval using NDCG@k, MAP@K ...
+        #### Evaluate your retrieval using NDCG@k, MAP@K ...
 
-    logging.info("Retriever evaluation for k in: {}".format(retriever.k_values))
-    ndcg, _map, recall, precision = retriever.evaluate(qrels, results, retriever.k_values)
+        logging.info("Retriever evaluation for k in: {}".format(retriever.k_values))
+        ndcg, _map, recall, precision = retriever.evaluate(qrels, results, retriever.k_values)
 
-    mrr = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="mrr")
-    recall_cap = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="r_cap")
-    hole = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="hole")
+        mrr = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="mrr")
+        # recall_cap = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="r_cap")
+        # hole = retriever.evaluate_custom(qrels, results, retriever.k_values, metric="hole")
 
-    tock = time.time()
-    print("--- Total time taken: {:.2f} seconds ---".format(tock - tick))
+        tock = time.time()
+        print("--- Total time taken: {:.2f} seconds ---".format(tock - tick))
 
-    # #### Print top-k documents retrieved ####
-    # top_k = 10
+        # #### Print top-k documents retrieved ####
+        # top_k = 10
 
-    # query_id, ranking_scores = random.choice(list(results.items()))
-    # scores_sorted = sorted(ranking_scores.items(), key=lambda item: item[1], reverse=True)
-    # query = queries.filter(lambda x: x['id']==query_id)[0]['text']
-    # logging.info("Query : %s\n" % query)
+        # query_id, ranking_scores = random.choice(list(results.items()))
+        # scores_sorted = sorted(ranking_scores.items(), key=lambda item: item[1], reverse=True)
+        # query = queries.filter(lambda x: x['id']==query_id)[0]['text']
+        # logging.info("Query : %s\n" % query)
 
-    # for rank in range(top_k):
-    #     doc_id = scores_sorted[rank][0]
-    #     doc = corpus.filter(lambda x: x['id']==doc_id)[0]
-    #     # Format: Rank x: ID [Title] Body
-    #     logging.info("Rank %d: %s [%s] - %s\n" % (rank+1, doc_id, doc.get("title"), doc.get("text")))
+        # for rank in range(top_k):
+        #     doc_id = scores_sorted[rank][0]
+        #     doc = corpus.filter(lambda x: x['id']==doc_id)[0]
+        #     # Format: Rank x: ID [Title] Body
+        #     logging.info("Rank %d: %s [%s] - %s\n" % (rank+1, doc_id, doc.get("title"), doc.get("text")))
